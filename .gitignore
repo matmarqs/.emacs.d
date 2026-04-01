@@ -1,0 +1,32 @@
+# Emacs core files
+**/*~
+**/\#*\#
+**/*.elc
+**/*.eln
+**/*.log
+
+# Auto-save and cache
+auto-save-list/
+eln-cache/
+tramp
+
+# Package managers
+elpa/
+straight/
+.elpa/
+.straight/
+
+# LSP and project files
+.lsp-session-v1
+projectile-bookmarks.eld
+.clangd/
+.ccls-cache/
+
+# Recent files
+recentf
+
+# Editor backups
+*.swp
+*.swo
+*.bak
+*.orig
