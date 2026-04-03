@@ -56,11 +56,15 @@
 
   (matmarqs-leaderkeys
     "f" '(:ignore t :wk "File")
-    "f f" '(find-file :wk "Find file")
+    "f f" '(counsel-find-file :wk "Find file")
     "f r" '(counsel-recentf :wk "Recent files")
-    "f d" '(dired :wk "Open dired")
-    "f D" '(dired-jump :wk "Dired jump to current")
-    "f e" '((lambda () (interactive) (find-file user-emacs-directory)) :wk "Open emacs config dir"))
+    "f e" '((lambda () (interactive) (counsel-find-file user-emacs-directory)) :wk "Open emacs config dir"))
+
+  ;; ============================================
+  ;; Dired (SPC d)
+  ;; ============================================
+  (matmarqs-leaderkeys
+    "d" '(dired-jump :wk "Dired current directory"))
 
   ;; ============================================
   ;; Buffer Operations (SPC b)
@@ -69,12 +73,22 @@
   (matmarqs-leaderkeys
     "b" '(:ignore t :wk "Buffer")
     "b b" '(switch-to-buffer :wk "Switch buffer")
+    "b i" '(ibuffer :wk "List all buffers")
     "b k" '(kill-current-buffer :wk "Kill buffer")
     "b K" '(kill-some-buffers :wk "Kill multiple buffers")
     "b n" '(next-buffer :wk "Next buffer")
     "b p" '(previous-buffer :wk "Previous buffer")
     "b r" '(revert-buffer :wk "Reload buffer")
     "b R" '(rename-buffer :wk "Rename buffer"))
+
+  ;; ============================================
+  ;; Eval Operations (SPC e)
+  ;; ============================================
+
+  (matmarqs-leaderkeys
+    "e" '(:ignore t :wk "Eval Elisp")
+    "e e" '(elisp-eval-region-or-buffer :wk "Eval region or buffer")
+    "e x" '(eval-expression :wk "Eval expression"))
 
   ;; ============================================
   ;; Window Operations (SPC w)
@@ -93,33 +107,30 @@
     (matmarqs-leaderkeys
       "p" '(:ignore t :wk "Project")
       "p f" '(projectile-find-file :wk "Find file in project")
-      "p g" '(projectile-grep :wk "Grep in project")
+      "p g" '(projectile-ripgrep :wk "Grep in project")
       "p p" '(projectile-switch-project :wk "Switch project")
       "p d" '(projectile-dired :wk "Project dired")
       "p c" '(projectile-compile-project :wk "Compile project")
       "p r" '(projectile-recentf :wk "Recent project files")
       "p b" '(projectile-switch-to-buffer :wk "Switch to project buffer")
       "p t" '(projectile-test-project :wk "Test project")
-      "p k" '(projectile-kill-buffers :wk "Kill project buffers")
-      "p o" '(projectile-multi-occur :wk "Multi-occur in project")
-      "p i" '(projectile-invalidate-cache :wk "Invalidate cache")))
+      "p k" '(projectile-kill-buffers :wk "Kill project buffers")))
 
   ;; ============================================
   ;; Code/LSP Operations (SPC c)
   ;; ============================================
 
   (matmarqs-leaderkeys
-    "c" '(:ignore t :wk "Code")
-    "c d" '(lsp-find-definition :wk "Go to definition")
-    "c i" '(lsp-find-implementation :wk "Go to implementation")
-    "c r" '(lsp-find-references :wk "Find references")
-    "c t" '(lsp-find-type-definition :wk "Go to type definition")
-    "c n" '(lsp-rename :wk "Rename symbol")
-    "c a" '(lsp-execute-code-action :wk "Code actions")
-    "c e" '(lsp-ui-flycheck-list-errors :wk "List errors")
-    "c f" '(clang-format-buffer :wk "Format buffer")
-    "c h" '(lsp-ui-doc-glance :wk "Hover documentation")
-    "c R" '(lsp-workspace-restart :wk "Restart LSP"))
+    "g" '(:ignore t :wk "Code")
+    "g d" '(lsp-find-definition :wk "Go to definition")
+    "g r" '(lsp-find-references :wk "Find references")
+    "g t" '(lsp-find-type-definition :wk "Go to type definition")
+    "g n" '(lsp-rename :wk "Rename symbol")
+    "g a" '(lsp-execute-code-action :wk "Code actions")
+    "g e" '(lsp-ui-flycheck-list-errors :wk "List errors")
+    "g f" '(clang-format-buffer :wk "Format buffer")
+    "g h" '(lsp-ui-doc-glance :wk "Hover documentation")
+    "g R" '(lsp-workspace-restart :wk "Restart LSP"))
 
   ;; ============================================
   ;; Search Operations (SPC s)
@@ -148,6 +159,7 @@
 
   (matmarqs-leaderkeys
     "h" '(:ignore t :wk "Help")
+    "h a" '(counsel-apropos :wk "Apropos")
     "h f" '(describe-function :wk "Describe function")
     "h v" '(describe-variable :wk "Describe variable")
     "h k" '(describe-key :wk "Describe key")

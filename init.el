@@ -28,6 +28,7 @@
 (load-file "~/.emacs.d/config/evil-config.el")
 (load-file "~/.emacs.d/config/lsp-config.el")
 (load-file "~/.emacs.d/config/keybindings-config.el")
+(load-file "~/.emacs.d/config/rg-config.el")
 
 ;; -- CUSTOM CONFIG BELOW --
 
@@ -53,6 +54,7 @@
 ;; Use spaces instead of tabs
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
+(setq c-default-style "bsd" c-basic-offset 4)
 
 ;; Enable better clipboard integration
 (setq select-enable-clipboard t)

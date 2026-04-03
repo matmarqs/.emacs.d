@@ -9,6 +9,7 @@
 auto-save-list/
 eln-cache/
 tramp
+eshell/
 
 # Package managers
 elpa/
