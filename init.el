@@ -29,6 +29,7 @@
 (load-file "~/.emacs.d/config/lsp-config.el")
 (load-file "~/.emacs.d/config/keybindings-config.el")
 (load-file "~/.emacs.d/config/rg-config.el")
+(load-file "~/.emacs.d/config/git-config.el")
 
 ;; -- CUSTOM CONFIG BELOW --
 
