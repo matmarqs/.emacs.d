@@ -20,14 +20,14 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
-;; evil-mode: vim keybindings
 (use-package diminish)
 (add-to-list 'load-path "~/.emacs.d/modules/")
 (add-to-list 'load-path "~/.emacs.d/config/")
 
-(load-file "~/.emacs.d/config/evil-config.el")
+;;(load-file "~/.emacs.d/config/evil-config.el")
 (load-file "~/.emacs.d/config/lsp-config.el")
-(load-file "~/.emacs.d/config/keybindings-config.el")
+;;(load-file "~/.emacs.d/config/keybindings-config.el")
+(load-file "~/.emacs.d/config/keybindings-emacs.el")
 (load-file "~/.emacs.d/config/rg-config.el")
 (load-file "~/.emacs.d/config/git-config.el")
 
@@ -56,6 +56,12 @@
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 (setq c-default-style "bsd" c-basic-offset 4)
+
+;; Remove trailing whitespace on save only for C/C++
+(add-hook 'c-mode-hook
+          (lambda () (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)))
+(add-hook 'c++-mode-hook
+          (lambda () (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)))
 
 ;; Enable better clipboard integration
 (setq select-enable-clipboard t)

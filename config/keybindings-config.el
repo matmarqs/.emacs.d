@@ -7,27 +7,27 @@
 ;; ============================================
 
 ;; Font scaling
-(global-set-key (kbd "C-=") 'text-scale-increase)
-(global-set-key (kbd "C--") 'text-scale-decrease)
+;(global-set-key (kbd "C-=") 'text-scale-increase)
+;(global-set-key (kbd "C--") 'text-scale-decrease)
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
 ;; Better scrolling
-(global-set-key (kbd "C-u") 'scroll-up-command)
-(global-set-key (kbd "C-d") 'scroll-down-command)
+;(global-set-key (kbd "C-u") 'scroll-up-command)
+;(global-set-key (kbd "C-d") 'scroll-down-command)
 
 ;; Window navigation
-(global-set-key (kbd "C-h") 'windmove-left)
-(global-set-key (kbd "C-j") 'windmove-down)
-(global-set-key (kbd "C-k") 'windmove-up)
-(global-set-key (kbd "C-l") 'windmove-right)
+;(global-set-key (kbd "C-h") 'windmove-left)
+;(global-set-key (kbd "C-j") 'windmove-down)
+;(global-set-key (kbd "C-k") 'windmove-up)
+;(global-set-key (kbd "C-l") 'windmove-right)
 
 ;; Buffer movement with shift
 (require 'buffer-move)
-(global-set-key (kbd "C-S-h") 'buf-move-left)
-(global-set-key (kbd "C-S-j") 'buf-move-down)
-(global-set-key (kbd "C-S-k") 'buf-move-up)
-(global-set-key (kbd "C-S-l") 'buf-move-right)
+;(global-set-key (kbd "C-S-h") 'buf-move-left)
+;(global-set-key (kbd "C-S-j") 'buf-move-down)
+;(global-set-key (kbd "C-S-k") 'buf-move-up)
+;(global-set-key (kbd "C-S-l") 'buf-move-right)
 
 ;; Clear conflicting evil keys
 (with-eval-after-load 'evil-maps
@@ -165,7 +165,8 @@
     "h k" '(describe-key :wk "Describe key")
     "h m" '(describe-mode :wk "Describe mode")
     "h b" '(describe-bindings :wk "Describe bindings")
-    "h r" '(info-emacs-manual :wk "Emacs manual")))
+    "h r" '(info-emacs-manual :wk "Emacs manual"))
+)
 
 ;; ============================================
 ;; Ivy-rich Fix

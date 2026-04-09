@@ -1,4 +1,4 @@
-;;; lsp-config.el --- Minimal but complete LSP configuration -*- lexical-binding: t; -*-
+S;;; lsp-config.el --- Minimal but complete LSP configuration -*- lexical-binding: t; -*-
 
 ;;; Code:
 
@@ -15,13 +15,17 @@
   (setq lsp-completion-provider :capf
         lsp-idle-delay 0.3
         lsp-enable-symbol-highlighting t
-        lsp-headerline-breadcrumb-enable t)
+        lsp-headerline-breadcrumb-enable t
+        lsp-enable-on-type-formatting nil
+        lsp-enable-indentation nil
+        lsp-enable-text-document-sync nil)
   
   ;; clangd settings
   (setq lsp-clients-clangd-args
         '("--background-index"
           "--clang-tidy"
-          "--completion-style=detailed")))
+          "--completion-style=detailed"
+          "--fallback-style=bsd")))
 
 ;; LSP UI (minimal but useful)
 (use-package lsp-ui
@@ -49,11 +53,20 @@
   :straight t
   :hook (after-init . global-flycheck-mode))
 
-;; Code formatting
+
+;; Code formatting - configure to use BSD style with 4 spaces
 (use-package clang-format
   :straight t
-  :hook ((c-mode . clang-format-on-save-mode)
-         (c++-mode . clang-format-on-save-mode)))
+  :config
+  ;; Set clang-format to use BSD style with 4 spaces
+  (setq clang-format-style "bsd")
+  (setq clang-format-fallback-style "bsd")
+
+  ;; Manual formatting only (no auto-format on save)
+  ;; Remove or comment out the hook if you want manual control
+  ;; :hook ((c-mode . clang-format-on-save-mode)
+  ;;        (c++-mode . clang-format-on-save-mode))
+)
 
 ;; Ivy and Counsel for completion (replace the ivy-rich section)
 (use-package ivy
