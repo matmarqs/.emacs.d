@@ -1,4 +1,4 @@
-S;;; lsp-config.el --- Minimal but complete LSP configuration -*- lexical-binding: t; -*-
+;;; lsp-config.el --- Minimal but complete LSP configuration -*- lexical-binding: t; -*-
 
 ;;; Code:
 
