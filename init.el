@@ -30,6 +30,7 @@
 (load-file "~/.emacs.d/config/keybindings-emacs.el")
 (load-file "~/.emacs.d/config/rg-config.el")
 (load-file "~/.emacs.d/config/git-config.el")
+;;(load-file "~/.emacs.d/config/markdown-config.el")
 
 ;; -- CUSTOM CONFIG BELOW --
 
