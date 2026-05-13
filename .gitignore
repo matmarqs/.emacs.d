@@ -1,6 +1,6 @@
 # Emacs core files
 **/*~
-**/\#*\#
+**/*\#*
 **/*.elc
 **/*.eln
 **/*.log

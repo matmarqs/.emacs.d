@@ -7,6 +7,9 @@
 ;; Global Keybindings (Standard Emacs)
 ;; ============================================
 
+(global-set-key (kbd "C-q d") 'duplicate-line)
+(global-set-key (kbd "C-q k") 'kill-whole-line)
+
 ;; Font scaling
 ;;(global-set-key (kbd "C-=") 'text-scale-increase)
 ;;(global-set-key (kbd "C--") 'text-scale-decrease)
@@ -35,13 +38,6 @@
 (global-set-key (kbd "C-q f e") (lambda () (interactive) (counsel-find-file user-emacs-directory)))
 (global-set-key (kbd "C-q f s") 'save-buffer)
 (global-set-key (kbd "C-q f S") 'save-some-buffers)
-
-;; ============================================
-;; Dired (C-q d)
-;; ============================================
-
-(global-set-key (kbd "C-q d d") 'dired-jump)
-(global-set-key (kbd "C-q d j") 'dired-jump)
 
 ;; ============================================
 ;; Buffer Operations (C-q b)
