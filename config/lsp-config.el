@@ -42,8 +42,9 @@
   :diminish
   :custom
   (company-begin-commands '(self-insert-command))
+  (add-to-list 'company-backends 'company-files)
   (company-idle-delay .1)
-  (company-minimum-prefix-length 2)
+  (company-minimum-prefix-length 4)
   (company-show-numbers t)
   (company-tooltip-align-annotations 't)
   (global-company-mode t))
