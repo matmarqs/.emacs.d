@@ -28,6 +28,8 @@
 (add-to-list 'load-path "~/.emacs.d/modules/")
 (add-to-list 'load-path "~/.emacs.d/config/")
 
+(use-package vterm)
+
 ;;(load-file "~/.emacs.d/config/evil-config.el")
 (load-file "~/.emacs.d/config/lsp-config.el")
 ;;(load-file "~/.emacs.d/config/keybindings-config.el")
@@ -39,8 +41,15 @@
 ;; -- CUSTOM CONFIG BELOW --
 
 ;; my custom theme
-(set-frame-parameter (selected-frame) 'alpha '(93 93))
-(add-to-list 'default-frame-alist '(alpha-background . 93))
+;; Apply alpha to current frame if it exists
+(when (display-graphic-p)
+  (set-frame-parameter (selected-frame) 'alpha '(93 93)))
+;; Ensure alpha is applied to all new frames
+(add-to-list 'default-frame-alist '(alpha . (93 . 93)))
+(add-hook 'after-make-frame-functions
+          (lambda (frame)
+            (when (display-graphic-p)
+              (set-frame-parameter frame 'alpha '(93 93)))))
 
 (setq custom-file "~/.emacs.d/custom.el") ;; custom-file is where Emacs writes the automatic config
 (load-file custom-file)
