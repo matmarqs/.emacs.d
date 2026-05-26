@@ -38,6 +38,8 @@
 (load-file "~/.emacs.d/config/git-config.el")
 ;;(load-file "~/.emacs.d/config/markdown-config.el")
 
+(set-face-attribute 'default nil :height 180)
+
 ;; -- CUSTOM CONFIG BELOW --
 
 ;; my custom theme
