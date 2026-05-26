@@ -16,6 +16,10 @@
 ;(global-set-key (kbd "C-u") 'scroll-up-command)
 ;(global-set-key (kbd "C-d") 'scroll-down-command)
 
+(with-eval-after-load 'evil
+  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+  (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up))
+
 ;; Window navigation
 ;(global-set-key (kbd "C-h") 'windmove-left)
 ;(global-set-key (kbd "C-j") 'windmove-down)
