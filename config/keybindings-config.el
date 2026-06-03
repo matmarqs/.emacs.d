@@ -12,6 +12,22 @@
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
+(defun other-window-eshell ()
+  "Open a new eshell in a split window at current buffer's directory."
+  (interactive)
+  (let ((dir default-directory))
+    (select-window (split-window-below))
+    (let ((default-directory dir))
+      (eshell))))
+
+(global-set-key (kbd "C-x 4 s") 'other-window-eshell)
+
+(global-set-key (kbd "C-x C-f") 'counsel-file-jump)
+
+(global-set-key (kbd "C-c C-d") 'cd)
+(setq find-program "fdfind")
+(setq counsel-file-jump-args '("--hidden"))
+
 ;; Better scrolling
 ;(global-set-key (kbd "C-u") 'scroll-up-command)
 ;(global-set-key (kbd "C-d") 'scroll-down-command)
@@ -60,7 +76,7 @@
 
   (matmarqs-leaderkeys
     "f" '(:ignore t :wk "File")
-    "f f" '(counsel-find-file :wk "Find file")
+    "f f" '(counsel-file-jump :wk "Find file")
     "f r" '(counsel-recentf :wk "Recent files")
     "f e" '((lambda () (interactive) (counsel-find-file user-emacs-directory)) :wk "Open emacs config dir"))
 
@@ -142,7 +158,7 @@
 
   (matmarqs-leaderkeys
     "s" '(:ignore t :wk "Search")
-    "s f" '(counsel-find-file :wk "Find file")
+    "s f" '(counsel-file-jump :wk "Find file")
     "s g" '(counsel-grep-or-swiper :wk "Grep in project")
     "s m" '(counsel-imenu :wk "Imenu (functions)")
     "s r" '(counsel-recentf :wk "Recent files"))
