@@ -7,8 +7,8 @@
 ;; ============================================
 
 ;; Font scaling
-;(global-set-key (kbd "C-=") 'text-scale-increase)
-;(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
@@ -44,10 +44,10 @@
 
 ;; Buffer movement with shift
 (require 'buffer-move)
-;(global-set-key (kbd "C-S-h") 'buf-move-left)
-;(global-set-key (kbd "C-S-j") 'buf-move-down)
-;(global-set-key (kbd "C-S-k") 'buf-move-up)
-;(global-set-key (kbd "C-S-l") 'buf-move-right)
+(global-set-key (kbd "C-S-h") 'buf-move-left)
+(global-set-key (kbd "C-S-j") 'buf-move-down)
+(global-set-key (kbd "C-S-k") 'buf-move-up)
+(global-set-key (kbd "C-S-l") 'buf-move-right)
 
 ;; Clear conflicting evil keys
 (with-eval-after-load 'evil-maps
