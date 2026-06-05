@@ -11,23 +11,39 @@
 (global-set-key (kbd "C-q k") 'kill-whole-line)
 
 ;; Font scaling
-;;(global-set-key (kbd "C-=") 'text-scale-increase)
-;;(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
-;; Window navigation with C-q prefix
-(global-set-key (kbd "C-q w b") 'windmove-left)
-(global-set-key (kbd "C-q w n") 'windmove-down)
-(global-set-key (kbd "C-q w p") 'windmove-up)
-(global-set-key (kbd "C-q w f") 'windmove-right)
 
-;; Buffer movement with shift (C-q + Shift)
+(defun other-window-eshell ()
+  "Open a new eshell in a split window at current buffer's directory."
+  (interactive)
+  (let ((dir default-directory))
+    (select-window (split-window-below))
+    (let ((default-directory dir))
+      (eshell))))
+
+(global-set-key (kbd "C-x 4 s") 'other-window-eshell)
+
+(global-set-key (kbd "C-x C-f") 'counsel-file-jump)
+
+(global-set-key (kbd "C-c C-d") 'cd)
+(setq find-program "fd")
+(setq counsel-file-jump-args '("--hidden"))
+
+;; only if evil mode
+(with-eval-after-load 'evil
+  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+  (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up))
+
+;; Buffer movement with shift
 (require 'buffer-move)
-(global-set-key (kbd "C-q w B") 'buf-move-left)
-(global-set-key (kbd "C-q w N") 'buf-move-down)
-(global-set-key (kbd "C-q w P") 'buf-move-up)
-(global-set-key (kbd "C-q w F") 'buf-move-right)
+(global-set-key (kbd "C-S-h") 'buf-move-left)
+(global-set-key (kbd "C-S-j") 'buf-move-down)
+(global-set-key (kbd "C-S-k") 'buf-move-up)
+(global-set-key (kbd "C-S-l") 'buf-move-right)
 
 ;; ============================================
 ;; File Operations (C-q f)
