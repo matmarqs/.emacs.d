@@ -12,6 +12,7 @@
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
+
 (defun other-window-eshell ()
   "Open a new eshell in a split window at current buffer's directory."
   (interactive)
@@ -25,7 +26,7 @@
 (global-set-key (kbd "C-x C-f") 'counsel-file-jump)
 
 (global-set-key (kbd "C-c C-d") 'cd)
-(setq find-program "fdfind")
+(setq find-program "fd")
 (setq counsel-file-jump-args '("--hidden"))
 
 ;; Better scrolling
@@ -35,6 +36,7 @@
 (with-eval-after-load 'evil
   (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
   (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up))
+
 
 ;; Window navigation
 ;(global-set-key (kbd "C-h") 'windmove-left)
