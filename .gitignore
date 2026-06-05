@@ -4,6 +4,7 @@
 **/*.elc
 **/*.eln
 **/*.log
+**/history
 
 # Auto-save and cache
 auto-save-list/
