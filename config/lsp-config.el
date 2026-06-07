@@ -6,36 +6,36 @@
 ;; Core LSP
 ;; ============================================
 
-(use-package lsp-mode
-  :straight t
-  :commands lsp
-  :hook ((c-mode . lsp-deferred)
-         (c++-mode . lsp-deferred))
-  :config
-  (setq lsp-completion-provider :capf
-        lsp-idle-delay 0.3
-        lsp-enable-symbol-highlighting t
-        lsp-headerline-breadcrumb-enable t
-        lsp-enable-on-type-formatting nil
-        lsp-enable-indentation nil
-        lsp-enable-text-document-sync nil)
+;; (use-package lsp-mode
+;;   :straight t
+;;   :commands lsp
+;;   :hook ((c-mode . lsp-deferred)
+;;          (c++-mode . lsp-deferred))
+;;   :config
+;;   (setq lsp-completion-provider :capf
+;;         lsp-idle-delay 0.3
+;;         lsp-enable-symbol-highlighting t
+;;         lsp-headerline-breadcrumb-enable t
+;;         lsp-enable-on-type-formatting nil
+;;         lsp-enable-indentation nil
+;;         lsp-enable-text-document-sync nil)
   
-  ;; clangd settings
-  (setq lsp-clients-clangd-args
-        '("--background-index"
-          "--clang-tidy"
-          "--completion-style=detailed"
-          "--fallback-style=bsd")))
+;;   ;; clangd settings
+;;   (setq lsp-clients-clangd-args
+;;         '("--background-index"
+;;           "--clang-tidy"
+;;           "--completion-style=detailed"
+;;           "--fallback-style=bsd")))
 
-;; LSP UI (minimal but useful)
-(use-package lsp-ui
-  :straight t
-  :after lsp-mode
-  :config
-  (setq lsp-ui-doc-enable t
-        lsp-ui-doc-position 'at-point
-        lsp-ui-sideline-enable t
-        lsp-ui-flycheck-enable t))
+;; ;; LSP UI (minimal but useful)
+;; (use-package lsp-ui
+;;   :straight t
+;;   :after lsp-mode
+;;   :config
+;;   (setq lsp-ui-doc-enable t
+;;         lsp-ui-doc-position 'at-point
+;;         lsp-ui-sideline-enable t
+;;         lsp-ui-flycheck-enable t))
 
 (use-package company
   :defer 2

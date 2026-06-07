@@ -31,7 +31,7 @@
 
 (global-set-key (kbd "C-c C-d") 'cd)
 (setq find-program "fd")
-(setq counsel-file-jump-args '("--hidden"))
+(setq counsel-file-jump-args '("--hidden" "--no-ignore-vcs"))
 
 ;; only if evil mode
 (with-eval-after-load 'evil
