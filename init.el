@@ -92,14 +92,28 @@
 
 (use-package consult
   :custom
-  ;; fd is used automatically when find-program is "fd"
-  (consult-find-args '("--hidden" "--no-ignore-vcs"))
-  :bind (("C-c s f" . consult-find)
+  (consult-fd-args
+   '((if (executable-find "fdfind" 'remote) "fdfind" "fd")
+     "--full-path" "--color=never" "--hidden" "--no-ignore-vcs"))
+  (consult-grep-args
+   '("rg" "--null --line-buffered --color=never --max-columns=1000"
+     "--path-separator / --smart-case --no-heading --with-filename --line-number"))
+  :bind (("C-c s f" . consult-fd)
          ("C-c s g" . consult-grep)
          ("C-c s i" . consult-imenu)
          ("C-c s r" . consult-recent-file)))
 
-(setq find-program "fd")
+;; Ripgrep for all built-in grep machinery: M-x grep / lgrep / rgrep /
+;; grep-find, and C-x p g (project-find-regexp, via xref-search-program).
+;; Note: rg exits 1 when nothing matches; Emacs still lists the results.
+(when (executable-find "rg")
+  (setq grep-program "rg"
+        grep-use-null-device nil
+        grep-command "rg --color=auto --no-heading -n <R>"
+        grep-template "rg --color=auto --no-heading -n <R> <F>"
+        grep-find-command "rg --color=auto --no-heading -n "
+        grep-find-template "rg --color=auto --no-heading -n <R> <D>"
+        xref-search-program 'ripgrep))
 
 ;; ============================================================
 ;; Discoverability: which-key
@@ -169,8 +183,10 @@
 ;; or run `bear -- make` once to generate compile_commands.json.
 (use-package clang-format
   :custom
-  (clang-format-style "bsd")
-  (clang-format-fallback-style "bsd")
+  ;; "bsd" is not a valid clang-format style name (checked on 21.1.7);
+  ;; use the project's .clang-format when present, else GNU.
+  (clang-format-style "file")
+  (clang-format-fallback-style "GNU")
   :bind (("C-c g f" . clang-format-buffer)))
 
 ;; Build: C-c c = M-x compile, C-x p c = project-compile (built-in)
@@ -188,8 +204,8 @@
 GAS uses `#' as the comment char on x86 (not `;'), and asm-mode's
 column-based auto-indent fights GAS layout, so use plain relative
 indent instead."
-  (setq-local comment-start "/* ")
-  (setq-local comment-end " */")
+  (setq-local comment-start "# ")
+  (setq-local comment-end "")
   (setq-local comment-start-skip "\\(#+\\|\\s<+\\)\\s-*")
   (setq-local comment-column 40)
   (setq-local indent-line-function 'indent-relative))
@@ -233,7 +249,7 @@ indent instead."
 (global-set-key (kbd "C-x 4 s") 'other-window-eshell)
 (global-set-key (kbd "C-c v v") 'multi-vterm)
 (global-set-key (kbd "C-c v s") 'my/vterm-split)
-(global-set-key (kbd "C-c v p") 'multi-vterm-previous)
+(global-set-key (kbd "C-c v p") 'multi-vterm-prev)
 (global-set-key (kbd "C-c v n") 'multi-vterm-next)
 (global-set-key (kbd "C-c v e") 'other-window-eshell)
 
@@ -262,7 +278,7 @@ indent instead."
 
 ;; Font scaling
 (global-set-key (kbd "C-+") 'text-scale-increase)
-(global-set-key (kbd "C-_") 'text-scale-decrease)
+(global-set-key (kbd "C-_") 'text-scale-decrease) ;; "C--" conflicts with "C-u -"
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
@@ -270,6 +286,7 @@ indent instead."
 (global-set-key (kbd "C-c f") 'find-file)
 (global-set-key (kbd "C-c d") 'duplicate-line)
 (global-set-key (kbd "C-c k") 'kill-whole-line)
+(global-set-key (kbd "C-c i") 'consult-imenu)
 
 ;; Buffers
 (global-set-key (kbd "C-c n") 'next-buffer)
