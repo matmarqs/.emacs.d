@@ -13,6 +13,7 @@ tramp
 eshell/
 url/
 projects
+ede-projects.el
 
 # Package managers
 elpa/
