@@ -1,11 +1,12 @@
 ;;; init.el --- Minimal Emacs config for C, GNU AS, and OS development -*- lexical-binding: t; -*-
 ;;
 ;; Native Emacs bindings only.  No evil, no org, no magit.
-;; Built-ins do the heavy lifting: project.el, eglot+clangd, flymake,
-;; xref, c-ts-mode, asm-mode (fixed for GAS), compile/gud, vterm.
+;; Built-ins do the heavy lifting: project.el, eglot (generic LSP,
+;; servers installed on demand), flymake, xref, treesit modes,
+;; asm-mode (fixed for GAS), compile/gud, vterm.
 ;;
 ;; Package count (everything else is Emacs built-in):
-;;   vertico, consult, which-key, diminish, move-text,
+;;   vertico, consult, which-key, diminish, markdown-mode,
 ;;   vterm, multi-vterm, clang-format, diff-hl, buffer-move (local)
 
 ;;; Code:
@@ -69,9 +70,9 @@
 (setq-default tab-width 4)
 (setq c-default-style "bsd" c-basic-offset 4)
 
-;; Treesit grammars for c-ts-mode / c++-ts-mode (install once, first run)
+;; Treesit grammars for tree-sitter modes (install once, first run)
 (when (fboundp 'treesit-install-language-grammar)
-  (dolist (lang '(c cpp))
+  (dolist (lang '(c cpp lua))
     (unless (treesit-language-available-p lang)
       (treesit-install-language-grammar lang))))
 
@@ -138,12 +139,15 @@
 (global-set-key (kbd "C-S-l") 'buf-move-right)
 
 ;; ============================================================
-;; C / C++: c-ts-mode + eglot (clangd) + flymake + clang-format
+;; C / C++: c-ts-mode
 ;; ============================================================
 
 (setq major-mode-remap-alist
       '((c-mode . c-ts-mode)
         (c++-mode . c++-ts-mode)))
+
+;; Lua has no non-treesit mode in Emacs 30:
+(add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-ts-mode))
 
 (dolist (hook '(c-ts-mode-hook c++-ts-mode-hook))
   (add-hook hook (lambda () (setq c-ts-mode-indent-offset 4))))
@@ -153,15 +157,103 @@
   (add-hook hook
             (lambda () (add-hook 'before-save-hook 'delete-trailing-whitespace nil t))))
 
+;; ============================================================
+;; Generic LSP: eglot + flymake, servers installed on demand
+;; ============================================================
+;;
+;; Opening a file starts its server via `my/eglot-maybe'.  If the
+;; server binary is missing you get one prompt offering to run the
+;; install command (remembered as declined for this session if you
+;; say no).  `M-x my/lsp-install-server' installs any server by hand.
+;; Elisp needs no LSP: built-in elisp-mode help is better.
+
+(defvar my/lsp-servers
+  '(((c-ts-mode c++-ts-mode c-mode c++-mode)
+     "clangd" "sudo xbps-install -S clang-tools-extra")
+    ((python-mode python-ts-mode)
+     "pyright-langserver" "pip3 install pyright")
+    ((js-mode js-ts-mode)
+     "typescript-language-server"
+     "npm install --prefix ~/.local typescript typescript-language-server")
+    ((lua-ts-mode)
+     "lua-language-server" "sudo xbps-install -S lua-language-server")
+    ((markdown-mode gfm-mode)
+     "marksman"
+     "mkdir -p ~/.local/bin && curl -fL https://github.com/artempyanykh/marksman/releases/download/2026-02-08/marksman-linux-x64 -o ~/.local/bin/marksman && chmod +x ~/.local/bin/marksman")
+    ((latex-mode)
+     "texlab" "sudo xbps-install -S texlab")
+    ((asm-mode)
+     "asm-lsp" "cargo install --root ~/.local asm-lsp"))
+  "Major modes -> (BINARY INSTALL-CMD).
+Single source of truth for `my/eglot-maybe' and
+`M-x my/lsp-install-server'.  To support a new language add an
+entry here and hook its mode in the dolist below.")
+
+(defvar my/lsp-skip nil
+  "Servers whose install prompt was declined this session.")
+
+(defun my/lsp-server-for-mode ()
+  "Return (BINARY INSTALL-CMD) for `major-mode', or nil."
+  (catch 'found
+    (dolist (entry my/lsp-servers)
+      (when (memq major-mode (car entry))
+        (throw 'found (cdr entry))))))
+
+(defun my/lsp--run-install (spec buffer)
+  "Install SPEC's server asynchronously; connect BUFFER when done."
+  (let ((binary (car spec))
+        (cmd (cadr spec)))
+    (message "Installing %s..." binary)
+    (make-process
+     :name binary
+     :buffer (get-buffer-create (format "*%s install*" binary))
+     :command (list "sh" "-c" cmd)
+     :sentinel
+     (lambda (process _event)
+       (if (zerop (process-exit-status process))
+           (message "%s installed." binary)
+         (pop-to-buffer (process-buffer process)))
+       (when (and (zerop (process-exit-status process))
+                  (buffer-live-p buffer))
+         (with-current-buffer buffer
+           (eglot-ensure)))))))
+
+(defun my/lsp-install ()
+  "Install the language server configured for the current buffer."
+  (interactive)
+  (let ((spec (my/lsp-server-for-mode)))
+    (if spec
+        (my/lsp--run-install spec (current-buffer))
+      (user-error "No language server configured for %s" major-mode))))
+
+(defun my/lsp-install-server (spec)
+  "Install any language server from `my/lsp-servers', by name."
+  (interactive
+   (let* ((choices (mapcar (lambda (e) (cons (cadr e) e)) my/lsp-servers))
+          (picked (completing-read "Install language server: " choices nil t)))
+     (list (cdr (assoc picked choices)))))
+  (my/lsp--run-install spec (current-buffer)))
+
+(defun my/eglot-maybe ()
+  "Start Eglot, offering to install a missing server first."
+  (let ((spec (my/lsp-server-for-mode)))
+    (cond
+     ((or (not spec) (executable-find (car spec))) (eglot-ensure))
+     ((memq (car spec) my/lsp-skip))
+     ((y-or-n-p (format "%s not found.  Install it (%s)? "
+                        (car spec) (cadr spec)))
+      (my/lsp--run-install spec (current-buffer)))
+     (t (push (car spec) my/lsp-skip)))))
+
 (use-package eglot
   :straight nil
-  :commands (eglot-rename eglot-code-actions eglot-hover)
-  :hook ((c-ts-mode . eglot-ensure)
-         (c++-ts-mode . eglot-ensure))
+  :commands (eglot-rename eglot-code-actions eglot-hover my/lsp-install-server)
   :custom
   (eglot-autoshutdown t)
   (eglot-send-changes-idle-time 0.3)
   :config
+  ;; Explicit entries so ours win over eglot's defaults (pyright,
+  ;; not pylsp):
   (add-to-list 'eglot-server-programs
                '((c-ts-mode c-mode c++-ts-mode c++-mode)
                  . ("clangd"
@@ -169,18 +261,41 @@
                     "--clang-tidy"
                     "--completion-style=detailed"
                     "--fallback-style=BSD")))
+  (add-to-list 'eglot-server-programs
+               '((python-mode python-ts-mode) . ("pyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs
+               '((js-mode js-ts-mode) . ("typescript-language-server" "--stdio")))
+  (add-to-list 'eglot-server-programs
+               '((lua-ts-mode) . ("lua-language-server")))
+  (add-to-list 'eglot-server-programs
+               '((markdown-mode gfm-mode) . ("marksman" "server")))
+  (add-to-list 'eglot-server-programs
+               '((latex-mode) . ("texlab")))
+  (add-to-list 'eglot-server-programs
+               '((asm-mode) . ("asm-lsp")))
   :bind (("C-c g d" . xref-find-definitions)
          ("C-c g D" . xref-find-references)
          ("C-c g r" . eglot-rename)
          ("C-c g a" . eglot-code-actions)
          ("C-c g h" . eglot-hover)
-         ("C-c g l" . flymake-show-buffer-diagnostics)))
+         ("C-c g l" . flymake-show-buffer-diagnostics)
+         ("C-c g i" . my/lsp-install-server)))
+
+(dolist (hook '(c-ts-mode-hook c++-ts-mode-hook python-mode-hook
+                js-mode-hook lua-ts-mode-hook markdown-mode-hook
+                gfm-mode-hook latex-mode-hook asm-mode-hook))
+  (add-hook hook #'my/eglot-maybe))
 
 ;; clangd tip for OS projects without compile_commands.json:
 ;; add a .clangd file at the project root with e.g.
 ;;   CompileFlags:
 ;;     Add: [-ffreestanding, -m64, -nostdinc, -Itools/include]
 ;; or run `bear -- make` once to generate compile_commands.json.
+
+;; ============================================================
+;; Formatting: clang-format
+;; ============================================================
+
 (use-package clang-format
   :custom
   ;; "bsd" is not a valid clang-format style name (checked on 21.1.7);
@@ -215,6 +330,14 @@ indent instead."
   :mode (("\\.S\\'" . asm-mode)      ; GAS with C preprocessor
          ("\\.asm\\'" . asm-mode))
   :hook (asm-mode . my/asm-gas-setup))
+
+;; ============================================================
+;; Markdown (no built-in mode; pairs with marksman via eglot)
+;; ============================================================
+
+(use-package markdown-mode
+  :mode (("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode)))
 
 ;; ============================================================
 ;; Terminals: vterm + multi-vterm (no tmux inside Emacs!)
