@@ -1,7 +1,7 @@
 ;;; init.el --- Minimal Emacs config for C, GNU AS, and OS development -*- lexical-binding: t; -*-
 ;; Native Emacs bindings only.  No evil, no org, no magit.
 ;; Package.el + use-package.  Eglot + mason for LSP.
-;; Ivy/counsel for completion (fd-powered file search).
+;; Ivy/counsel for completion (counsel-file-jump + fd).
 ;; Ghostel for terminal (libghostty-vt).
 
 ;;; Code:
@@ -24,12 +24,22 @@
 (add-to-list 'default-frame-alist '(alpha . (93 . 93)))
 (tool-bar-mode -1) (menu-bar-mode -1) (scroll-bar-mode -1)
 (global-hl-line-mode t) (show-paren-mode t) (global-display-line-numbers-mode t)
+(save-place-mode 1)
 (recentf-mode 1) (delete-selection-mode t) (electric-pair-mode t) (global-auto-revert-mode t)
 (setq scroll-margin 5 scroll-conservatively 101 scroll-preserve-screen-position t)
 (setq-default indent-tabs-mode nil tab-width 4)
 (setq make-backup-files nil auto-save-default nil
       native-comp-async-report-warnings-errors 'silent warning-minimum-level :error)
 (add-hook 'prog-mode-hook #'hs-minor-mode)
+
+;; Toggleable trailing whitespace removal on save.
+(define-minor-mode my/delete-trailing-whitespace-mode
+  "Delete trailing whitespace on save when enabled."
+  :lighter " DWS"
+  (if my/delete-trailing-whitespace-mode
+      (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
+    (remove-hook 'before-save-hook #'delete-trailing-whitespace t)))
+(my/delete-trailing-whitespace-mode 1)
 
 ;; ============================================================
 ;; LSP: eglot (built-in) + mason.el
@@ -46,26 +56,23 @@
          ("C-c g l" . flymake-show-buffer-diagnostics)))
 
 ;; ============================================================
-;; Completion: ivy + counsel (fd-powered file search)
+;; Completion: ivy + counsel (counsel-file-jump + fd)
 ;; ============================================================
 
-(defun my/counsel-fd-file-jump (&optional initial-input)
-  "Find file recursively using fd.  Falls back to `find-file' for new files."
-  (interactive)
-  (counsel-require-program "fd")
-  (let* ((default-directory (projectile-project-root))
-         (cands (process-lines "fd" "--type" "f" "--hidden" "--exclude" ".git")))
-    (ivy-read "fd: " cands :initial-input initial-input
-              :action (lambda (f) (find-file f)) :require-match nil
-              :history 'file-name-history :caller 'my/counsel-fd-file-jump)))
+(setq find-program "fd"
+      counsel-file-jump-args '("--hidden" "--no-ignore-vcs"))
 (use-package counsel
-  :bind (([remap find-file] . counsel-find-file) ("M-x" . counsel-M-x))
+  :bind (([remap find-file] . counsel-file-jump) ("M-x" . counsel-M-x))
   :custom (counsel-grep-base-command "rg --no-heading -n %s"))
 (use-package ivy
   :defer 0.5
   :custom (ivy-use-virtual-buffers t) (ivy-height 20)
           (ivy-sort-matches-functions-alist '((t . ivy--sort-files-by-date))) (ivy-wrap t)
   :config (ivy-mode 1))
+
+;; ============================================================
+;; Terminal + utilities
+;; ============================================================
 
 (use-package ghostel :defer t :custom (ghostel-shell "bash"))
 (use-package which-key
@@ -102,10 +109,15 @@
 
 ;; ============================================================
 ;; Keybindings
+;;
+;;   C-x C-f  counsel-file-jump (fd)  C-c g    code (eglot/xref)
+;;   C-c t d   trailing whitespace     C-c t l  line numbers
+;;   C-c t w   visual-line-mode        C-c t h  hl-line
+;;   C-c n/p   buffer nav              C-c r    revert
+;;   C-x 4 s   ghostel split           C-S-*    buffer move
 ;; ============================================================
 
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-(global-set-key (kbd "C-\\") 'ignore) ; Reserved for tmux
 (global-set-key (kbd "C-+") 'text-scale-increase)
 (global-set-key (kbd "C-_") 'text-scale-decrease)
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
@@ -114,17 +126,16 @@
                 (lambda () (interactive) (select-window (split-window-right))
                   (call-interactively 'ghostel)))
 
-;; buffer navigation
 (global-set-key (kbd "C-c n") 'next-buffer)
 (global-set-key (kbd "C-c p") 'previous-buffer)
 (global-set-key (kbd "C-c r") 'revert-buffer)
 
-;; toggle keybindings
 (global-set-key (kbd "C-c t l") 'display-line-numbers-mode)
 (global-set-key (kbd "C-c t w") 'visual-line-mode)
 (global-set-key (kbd "C-c t t") 'toggle-truncate-lines)
 (global-set-key (kbd "C-c t f") 'flymake-mode)
 (global-set-key (kbd "C-c t h") 'global-hl-line-mode)
+(global-set-key (kbd "C-c t d") 'my/delete-trailing-whitespace-mode)
 
 (global-set-key (kbd "C-S-h") 'buf-move-left)
 (global-set-key (kbd "C-S-j") 'buf-move-down)
