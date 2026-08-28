@@ -107,7 +107,6 @@
 
 ;; Keybindings
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-(global-unset-key (kbd "C-\\")) ; Pass through to tmux prefix in ghostel
 
 (global-set-key (kbd "C-+") 'text-scale-increase)
 (global-set-key (kbd "C-_") 'text-scale-decrease)
