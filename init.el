@@ -4,6 +4,7 @@
 ;; eglot + mason for LSP.
 ;; ivy/counsel for completion (counsel-file-jump + fd).
 ;; ghostel for terminal (libghostty-vt).
+;; zathura opens .pdf files
 
 (require 'use-package-ensure)
 (setq use-package-always-ensure t
@@ -105,6 +106,20 @@
 (when (executable-find "rg")
   (setq grep-program "rg" grep-use-null-device nil xref-search-program 'ripgrep))
 
+;; Let zathura open all .pdf files
+(defun my-open-pdf-in-zathura (filename)
+  "Open FILENAME in Zathura if it's a PDF."
+  (when (string-match-p "\\.pdf\\'" filename)
+    (let ((process-connection-type nil))
+      (start-process "zathura" nil "zathura" (expand-file-name filename)))
+    t))
+(defun my-find-file-advice (orig-fun &rest args)
+  "Open PDFs externally instead of in Emacs."
+  (if (my-open-pdf-in-zathura (car args))
+      nil  ; suppress original call, no buffer created
+    (apply orig-fun args)))
+(advice-add 'find-file :around #'my-find-file-advice) ;; intercept find-file
+
 ;; Keybindings
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
@@ -114,7 +129,9 @@
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
 (global-set-key (kbd "C-x 4 s")
-                (lambda () (interactive) (select-window (split-window-down))
+                (lambda () (interactive)
+                  (split-window-below)
+                  (other-window 1)
                   (call-interactively 'ghostel)))
 
 (global-set-key (kbd "C-c n") 'next-buffer)
