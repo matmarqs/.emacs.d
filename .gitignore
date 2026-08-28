@@ -17,7 +17,7 @@ ede-projects.el
 package-quickstart.el
 mason/
 .opencode/
-places/
+places
 
 # Package managers
 elpa/
