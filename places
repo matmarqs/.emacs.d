@@ -1,0 +1,19 @@
+;;; -*- coding: utf-8; mode: lisp-data -*-
+(("/home/sekai/.emacs.d/"
+  (dired-filename . "/home/sekai/.emacs.d/elpa"))
+ ("/home/sekai/nasm_os/print_string.asm" . 161)
+ ("/home/sekai/nasm_os/protected_mode_vga.asm" . 44)
+ ("/home/sekai/nasm_os/1_jmp.asm" . 53)
+ ("/home/sekai/nasm_os/2_int0x10.asm" . 13)
+ ("/home/sekai/nasm_os/5_conditional.asm" . 15)
+ ("/home/sekai/nasm_os/6_function_call.asm" . 149)
+ ("/home/sekai/nasm_os/8_segments.asm" . 15)
+ ("/home/sekai/nasm_os/9_disk_load.asm" . 603)
+ ("/home/sekai/nasm_os/disk_load.asm" . 563)
+ ("/home/sekai/nasm_os/"
+  (dired-filename . "/home/sekai/nasm_os/8_segments.asm"))
+ ("/home/sekai/" (dired-filename . "/home/sekai/idkos"))
+ ("/home/sekai/idkos/nb_asm/README.md" . 218)
+ ("/home/sekai/idkos/nb_asm/"
+  (dired-filename . "/home/sekai/idkos/nb_asm/README.md"))
+ ("/home/sekai/idkos/" (dired-filename . "/home/sekai/idkos/nb_asm")))
