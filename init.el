@@ -50,7 +50,7 @@
 
 ;; Completion: ivy + counsel (counsel-file-jump + fd)
 (setq find-program "fd"
-      counsel-file-jump-args '("--no-ignore-vcs"))
+      counsel-file-jump-args '("-i" "--hidden" "--no-ignore-vcs"))
 
 (use-package counsel
   :bind (([remap find-file] . counsel-file-jump) ("M-x" . counsel-M-x))
