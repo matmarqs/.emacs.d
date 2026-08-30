@@ -28,6 +28,7 @@
       warning-minimum-level :error
       compilation-scroll-output 'first-error)
 (recentf-mode 1) (delete-selection-mode t) (electric-pair-mode t) (global-auto-revert-mode t)
+(blink-cursor-mode -1)
 
 ;; UI elements
 (tool-bar-mode -1) (menu-bar-mode -1) (scroll-bar-mode -1)
@@ -50,7 +51,7 @@
 
 ;; Completion: ivy + counsel (counsel-file-jump + fd)
 (setq find-program "fd"
-      counsel-file-jump-args '("-i" "--hidden" "--no-ignore-vcs"))
+      counsel-file-jump-args '("-i" "--no-ignore-vcs"))
 
 (use-package counsel
   :bind (([remap find-file] . counsel-file-jump) ("M-x" . counsel-M-x))
@@ -70,6 +71,7 @@
   :ensure nil
   :hook ((c-mode c++-mode python-mode asm-mode) . eglot-ensure)
   :custom (eglot-autoshutdown t)
+          (eglot-code-action-indications nil)
           (eglot-report-progress nil)
           (flymake-show-diagnostics-at-end-of-line 'short)
   :bind (("C-c g d" . xref-find-definitions)
