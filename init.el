@@ -43,7 +43,7 @@
 ;; Toggleable trailing whitespace removal on save.
 (define-minor-mode my/delete-trailing-whitespace-mode
   "Delete trailing whitespace on save when enabled."
-  :lighter " DWS"
+  :lighter " delwspc"
   (if my/delete-trailing-whitespace-mode
       (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
     (remove-hook 'before-save-hook #'delete-trailing-whitespace t)))
@@ -80,15 +80,15 @@
          ("C-c g a" . eglot-code-actions)
          ("C-c g l" . flymake-show-buffer-diagnostics)))
 
-
-;; Simple NASM-friendly asm-mode
-(add-hook 'asm-mode-hook
-          (lambda ()
-            (setq-local tab-width 4)
-            (electric-indent-local-mode -1)
-            (setq-local comment-column 24)
-            (setq-local comment-start "; ")
-            (setq-local comment-add 0)))
+(use-package nasm-mode
+  :hook ((asm-mode . nasm-mode)
+         (nasm-mode . my/nasm-setup))
+  :custom (nasm-basic-offset 4)
+  :config
+  (defun my/nasm-setup ()
+    (setq-local comment-start "; ")
+    (setq-local comment-column 24)
+    (setq-local comment-add 0)))
 
 ;; Terminal + utilities
 (use-package ghostel :defer t :custom (ghostel-shell "bash"))
