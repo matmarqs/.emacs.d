@@ -47,7 +47,7 @@
   (if my/delete-trailing-whitespace-mode
       (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
     (remove-hook 'before-save-hook #'delete-trailing-whitespace t)))
-(my/delete-trailing-whitespace-mode 1)
+(add-hook 'find-file-hook #'my/delete-trailing-whitespace-mode)
 
 ;; Completion: ivy + counsel (counsel-file-jump + fd)
 (setq find-program "fd"
@@ -69,7 +69,7 @@
 (use-package mason :hook (after-init . mason-ensure))
 (use-package eglot
   :ensure nil
-  :hook ((c-mode c++-mode python-mode asm-mode) . eglot-ensure)
+  :hook ((c-mode c++-mode python-mode) . eglot-ensure)
   :custom (eglot-autoshutdown t)
           (eglot-code-action-indications nil)
           (eglot-report-progress nil)
@@ -79,6 +79,16 @@
          ("C-c g r" . eglot-rename)
          ("C-c g a" . eglot-code-actions)
          ("C-c g l" . flymake-show-buffer-diagnostics)))
+
+
+;; Simple NASM-friendly asm-mode
+(add-hook 'asm-mode-hook
+          (lambda ()
+            (setq-local tab-width 4)
+            (electric-indent-local-mode -1)
+            (setq-local comment-column 24)
+            (setq-local comment-start "; ")
+            (setq-local comment-add 0)))
 
 ;; Terminal + utilities
 (use-package ghostel :defer t :custom (ghostel-shell "bash"))
