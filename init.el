@@ -80,6 +80,12 @@
          ("C-c g a" . eglot-code-actions)
          ("C-c g l" . flymake-show-buffer-diagnostics)))
 
+;; This sets 4-space indent with K&R braces
+(setq c-default-style "k&r")
+(add-hook 'c-mode-common-hook
+          (lambda ()
+            (setq c-basic-offset 4)))
+
 (use-package nasm-mode
   :hook ((asm-mode . nasm-mode)
          (nasm-mode . my/nasm-setup))
