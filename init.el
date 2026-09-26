@@ -150,7 +150,7 @@
                 (lambda () (interactive) (split-window-below)
                   (other-window 1) (call-interactively #'ghostel)))
 (global-set-key (kbd "C-c r") #'revert-buffer)
-(windmove-default-keybindings 'meta)
+(windmove-swap-states-default-keybindings 'meta)
 
 (provide 'init)
 ;;; init.el ends here
