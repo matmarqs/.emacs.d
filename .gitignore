@@ -31,6 +31,7 @@ straight/
 projectile-bookmarks.eld
 .clangd/
 .ccls-cache/
+.cache/
 
 # Recent files
 recentf

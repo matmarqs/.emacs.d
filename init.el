@@ -1,172 +1,156 @@
 ;;; init.el -*- lexical-binding: t; -*-
-;; Native Emacs bindings only. No evil, no org, no magit.
-;; package.el + use-package.
-;; eglot + mason for LSP.
-;; ivy/counsel for completion (counsel-file-jump + fd).
-;; ghostel for terminal (libghostty-vt).
-;; zathura opens .pdf files
+;;; Hybrid Emacs/Vim configuration.
+;;;   normal state: Vim, but Emacs movement keybindings available
+;;;   insert state: Vanilla Emacs (C-a, C-e, C-k, M-f, ...)
 
 (require 'use-package-ensure)
-(setq use-package-always-ensure t
-      package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/"))
-      package-quickstart t)
-
-;; custom.el is where customize features go
+(setq use-package-always-ensure t package-quickstart t
+      package-archives '(("melpa"  . "https://melpa.org/packages/")
+                         ("elpa"   . "https://elpa.gnu.org/packages/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file 'noerror 'nomessage)
 
-;; Base behavior
+;;; Evil for normal-mode, Emacs for insert-mode
+(defun my/insert-newline-indent ()
+  (interactive) (evil-insert 1) (newline-and-indent))
+
+(use-package evil
+  :init (setq evil-want-integration t evil-want-keybinding nil
+              evil-want-C-u-scroll t evil-want-C-i-jump nil
+              evil-disable-insert-state-bindings t  ; insert = pure Emacs
+              evil-undo-system 'undo-redo
+              evil-move-beyond-eol t                ; M-e reaches sentence ends
+              evil-insert-state-cursor nil evil-normal-state-cursor nil)
+  :config
+  (dolist (m (list evil-normal-state-map evil-motion-state-map))
+    (dolist (k '(("C-y" . yank)
+                 ("C-b" . evil-backward-char)
+                 ("C-f" . evil-forward-char)
+                 ("C-n" . evil-next-line)
+                 ("C-p" . evil-previous-line)
+                 ("C-a" . move-beginning-of-line)
+                 ("C-e" . move-end-of-line)))
+      (define-key m (kbd (car k)) (cdr k))))
+  (define-key evil-normal-state-map (kbd "RET") #'my/insert-newline-indent)
+  (evil-mode 1))
+
+(evil-set-initial-state 'dired-mode 'emacs)
+
+;;; General settings
 (setq-default indent-tabs-mode nil tab-width 4)
-(setq scroll-margin 5
-      scroll-conservatively 101
+(setq scroll-margin 5 scroll-conservatively 101
       scroll-preserve-screen-position t
-      make-backup-files nil
-      auto-save-default nil
+      make-backup-files nil auto-save-default nil
       native-comp-async-report-warnings-errors 'silent
       warning-minimum-level :error
       compilation-scroll-output 'first-error)
-(recentf-mode 1) (delete-selection-mode t) (electric-pair-mode t) (global-auto-revert-mode t)
-(blink-cursor-mode -1)
-
-;; UI elements
+(recentf-mode 1) (delete-selection-mode 1) (electric-pair-mode 1)
+(global-auto-revert-mode 1) (blink-cursor-mode -1)
 (tool-bar-mode -1) (menu-bar-mode -1) (scroll-bar-mode -1)
-(global-hl-line-mode t) (show-paren-mode t) (global-display-line-numbers-mode t)
-(save-place-mode 1)
+(global-hl-line-mode 1) (show-paren-mode 1)
+(global-display-line-numbers-mode 1) (save-place-mode 1)
 (add-hook 'prog-mode-hook #'hs-minor-mode)
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
 
 ;; Alpha transparency
-(when (display-graphic-p) (set-frame-parameter (selected-frame) 'alpha '(93 93)))
+(when (display-graphic-p) (set-frame-parameter nil 'alpha '(93 93)))
 (add-to-list 'default-frame-alist '(alpha . (93 . 93)))
 
-;; Toggleable trailing whitespace removal on save.
-(define-minor-mode my/delete-trailing-whitespace-mode
-  "Delete trailing whitespace on save when enabled."
-  :lighter " delwspc"
-  (if my/delete-trailing-whitespace-mode
-      (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
-    (remove-hook 'before-save-hook #'delete-trailing-whitespace t)))
-(add-hook 'find-file-hook #'my/delete-trailing-whitespace-mode)
-
-;; Completion: ivy + counsel (counsel-file-jump + fd)
-(setq find-program "fd"
-      counsel-file-jump-args '("--ignore-case" "--hidden"))
-
+;;; Completion: ivy + counsel, company, yasnippet
+(setq find-program "fd" counsel-file-jump-args '("--ignore-case" "--hidden"))
 (use-package counsel
   :bind (([remap find-file] . counsel-file-jump) ("M-x" . counsel-M-x))
   :custom (counsel-grep-base-command "rg --no-heading -n %s"))
-
 (use-package ivy
   :defer 0.5
-  :custom (ivy-use-virtual-buffers t)
-          (ivy-height 20)
-          (ivy-sort-matches-functions-alist '((t . ivy--sort-files-by-date)))
-          (ivy-wrap t)
+  :custom (ivy-use-virtual-buffers t) (ivy-height 20) (ivy-wrap t)
+  (ivy-sort-matches-functions-alist '((t . ivy--sort-files-by-date)))
   :config (ivy-mode 1))
+(use-package company
+  :hook (after-init . global-company-mode)
+  :custom (company-idle-delay 0.2) (company-minimum-prefix-length 1)
+  (company-selection-wrap-around t) (company-show-numbers t)
+  :config (define-key company-mode-map (kbd "TAB") nil))
+(use-package yasnippet
+  :hook (after-init . yas-global-mode))
 
-;; LSP: eglot (built-in) + mason.el
-(use-package mason :hook (after-init . mason-ensure))
-(use-package eglot
-  :ensure nil
-  :hook ((c-mode c++-mode python-mode) . eglot-ensure)
-  :custom (eglot-autoshutdown t)
-          (eglot-code-action-indications nil)
-          (eglot-report-progress nil)
-          (flymake-show-diagnostics-at-end-of-line 'short)
-  :bind (("C-c g d" . xref-find-definitions)
-         ("C-c g D" . xref-find-references)
-         ("C-c g r" . eglot-rename)
-         ("C-c g a" . eglot-code-actions)
+;;; LSP: enabling only for specific languages I actually use.
+;;; Other LSP implementations are not that great (e.g. Python, NASM)
+(use-package lsp-mode
+  :init (setq lsp-keymap-prefix "C-c l"
+              lsp-warn-no-matched-clients nil
+              lsp-auto-install-server t
+              lsp-enable-on-type-formatting nil   ; stop reindenting on Enter
+              lsp-enable-indentation nil)         ; let cc-mode handle indent
+  :hook ((c-mode c++-mode lua-mode markdown-mode latex-mode) . lsp-deferred)
+  :bind (("C-c g d" . lsp-find-definition)
+         ("C-c g D" . lsp-find-references)
+         ("C-c g r" . lsp-rename)
+         ("C-c g a" . lsp-execute-code-action)
          ("C-c g l" . flymake-show-buffer-diagnostics)))
+(setq flymake-show-diagnostics-at-end-of-line 'short)
 
-;; This sets 4-space indent with K&R braces
+;;; C and NASM specific configs I like
 (setq c-default-style "k&r")
 (add-hook 'c-mode-common-hook
           (lambda ()
             (setq c-basic-offset 4)))
-
+(defun my/nasm-setup ()
+  (setq-local comment-start "; ")
+  (setq-local comment-column 24)
+  (setq-local comment-add 0))
 (use-package nasm-mode
-  :hook ((asm-mode . nasm-mode)
-         (nasm-mode . my/nasm-setup))
-  :custom (nasm-basic-offset 4)
-  :config
-  (defun my/nasm-setup ()
-    (setq-local comment-start "; ")
-    (setq-local comment-column 24)
-    (setq-local comment-add 0)))
+  :hook ((asm-mode . nasm-mode) (nasm-mode . my/nasm-setup))
+  :custom (nasm-basic-offset 4))
 
-;; Terminal + utilities
-(use-package ghostel :defer t :custom (ghostel-shell "bash"))
+;;; Terminal. Ghostel is great, emacs-only keybindings
+(use-package ghostel
+  :defer t :custom (ghostel-shell "bash")
+  :config (evil-set-initial-state 'ghostel-mode 'emacs)
+  (add-hook 'ghostel-mode-hook #'evil-emacs-state))
 
+;;; Misc
 (use-package which-key
-  :ensure nil
-  :hook (after-init . which-key-mode)
+  :ensure nil :hook (after-init . which-key-mode)
   :custom (which-key-idle-delay 0.3)
-          (which-key-side-window-location 'bottom)
-          (which-key-sort-order #'which-key-key-order-alpha)
-          (which-key-add-column-padding 1)
-          (which-key-min-display-lines 6)
-          (which-key-allow-imprecise-window-fit nil))
-
+  (which-key-side-window-location 'bottom)
+  (which-key-sort-order #'which-key-key-order-alpha)
+  (which-key-add-column-padding 1)
+  (which-key-min-display-lines 6)
+  (which-key-allow-imprecise-window-fit nil))
 (use-package diff-hl
   :hook (find-file . turn-on-diff-hl-mode)
   :config (global-diff-hl-mode))
-
 (use-package hl-todo
   :hook (prog-mode . hl-todo-mode)
   :custom (hl-todo-highlight-punctuation ":")
-  (hl-todo-keyword-faces '(("TODO" warning bold)
-                           ("FIXME" error bold)
+  (hl-todo-keyword-faces '(("TODO" warning bold) ("FIXME" error bold)
                            ("HACK" font-lock-constant-face bold)
                            ("NOTE" success bold))))
 
+;;; Ripgrep is the default for grepping
 (when (executable-find "rg")
   (setq grep-program "rg" grep-use-null-device nil xref-search-program 'ripgrep))
 
-;; Let zathura open all .pdf files
-(defun my-open-pdf-in-zathura (filename)
-  "Open FILENAME in Zathura if it's a PDF."
-  (when (string-match-p "\\.pdf\\'" filename)
-    (let ((process-connection-type nil))
-      (start-process "zathura" nil "zathura" (expand-file-name filename)))
-    t))
-(defun my-find-file-advice (orig-fun &rest args)
-  "Open PDFs externally instead of in Emacs."
-  (if (my-open-pdf-in-zathura (car args))
-      nil  ; suppress original call, no buffer created
-    (apply orig-fun args)))
-(advice-add 'find-file :around #'my-find-file-advice) ;; intercept find-file
+;;; PDFs open in zathura
+(defun my/find-file (orig &rest args)
+  (if (and (stringp (car args)) (string-match-p "\\.pdf\\'" (car args)))
+      (start-process "zathura" nil "zathura" (expand-file-name (car args)))
+    (apply orig args)))
+(advice-add 'find-file :around #'my/find-file)
 
-;; Keybindings
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-(global-set-key (kbd "C-+") 'text-scale-increase)
-(global-set-key (kbd "C-_") 'text-scale-decrease)
-(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
-(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
-
+;;; Global keybindings
+(global-set-key (kbd "C-x C-b") #'ibuffer)
+(global-set-key (kbd "C-+") #'text-scale-increase)
+(global-set-key (kbd "C-_") #'text-scale-decrease)
+(global-set-key (kbd "<C-wheel-up>")   #'text-scale-increase)
+(global-set-key (kbd "<C-wheel-down>") #'text-scale-decrease)
 (global-set-key (kbd "C-x 4 s")
-                (lambda () (interactive)
-                  (split-window-below)
-                  (other-window 1)
-                  (call-interactively 'ghostel)))
-
-(global-set-key (kbd "C-c n") 'next-buffer)
-(global-set-key (kbd "C-c p") 'previous-buffer)
-(global-set-key (kbd "C-c r") 'revert-buffer)
-
-(global-set-key (kbd "C-c t l") 'display-line-numbers-mode)
-(global-set-key (kbd "C-c t w") 'visual-line-mode)
-(global-set-key (kbd "C-c t t") 'toggle-truncate-lines)
-(global-set-key (kbd "C-c t f") 'flymake-mode)
-(global-set-key (kbd "C-c t h") 'global-hl-line-mode)
-(global-set-key (kbd "C-c t d") 'my/delete-trailing-whitespace-mode)
-
-(global-set-key (kbd "C-S-h") 'windmove-swap-states-left)
-(global-set-key (kbd "C-S-j") 'windmove-swap-states-down)
-(global-set-key (kbd "C-S-k") 'windmove-swap-states-up)
-(global-set-key (kbd "C-S-l") 'windmove-swap-states-right)
+                (lambda () (interactive) (split-window-below)
+                  (other-window 1) (call-interactively #'ghostel)))
+(global-set-key (kbd "C-c r") #'revert-buffer)
+(windmove-default-keybindings 'meta)
 
 (provide 'init)
 ;;; init.el ends here
