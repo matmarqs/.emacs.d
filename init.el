@@ -35,7 +35,12 @@
   (define-key evil-normal-state-map (kbd "RET") #'my/insert-newline-indent)
   (evil-mode 1))
 
-(evil-set-initial-state 'dired-mode 'emacs)
+(use-package evil-collection
+  :after evil :demand t
+  :init (setq evil-collection-mode-list
+              '(dired help info ibuffer calendar xref flymake)
+              evil-collection-key-blacklist '("g"))
+  :config (evil-collection-init))
 
 ;;; General settings
 (setq-default indent-tabs-mode nil tab-width 4)
