@@ -1,7 +1,5 @@
 ;;; init.el -*- lexical-binding: t; -*-
 ;;; Hybrid Emacs/Vim configuration.
-;;;   normal state: Vim, but Emacs movement keybindings available
-;;;   insert state: Vanilla Emacs (C-a, C-e, C-k, M-f, ...)
 
 (require 'use-package-ensure)
 (setq use-package-always-ensure t package-quickstart t
@@ -12,17 +10,28 @@
 (load custom-file 'noerror 'nomessage)
 
 ;;; Evil for normal-mode, Emacs for insert-mode
-(defun my/insert-newline-indent ()
-  (interactive) (evil-insert 1) (newline-and-indent))
+(defun my/insert-newline-indent () (interactive) (evil-insert 1) (newline-and-indent))
+;; The keybindings below only apply when the buffer is read-only
+(defun my/emacs-h () (interactive) (if buffer-read-only (backward-char) (self-insert-command 1)))
+(defun my/emacs-j () (interactive) (if buffer-read-only (next-line) (self-insert-command 1)))
+(defun my/emacs-k () (interactive) (if buffer-read-only (previous-line) (self-insert-command 1)))
+(defun my/emacs-l () (interactive) (if buffer-read-only (forward-char) (self-insert-command 1)))
+(defun my/emacs-C-d () (interactive) (if buffer-read-only (evil-scroll-down 0) (call-interactively #'delete-char)))
+(defun my/emacs-C-u () (interactive) (if buffer-read-only (evil-scroll-up 0) (call-interactively #'universal-argument)))
 
 (use-package evil
-  :init (setq evil-want-integration t evil-want-keybinding nil
+  :init (setq evil-want-integration nil evil-want-keybinding nil
               evil-want-C-u-scroll t evil-want-C-i-jump nil
               evil-disable-insert-state-bindings t  ; insert = pure Emacs
               evil-undo-system 'undo-redo
               evil-move-beyond-eol t                ; M-e reaches sentence ends
-              evil-insert-state-cursor nil evil-normal-state-cursor nil)
+              evil-insert-state-cursor nil evil-normal-state-cursor nil
+              evil-default-state 'emacs             ; make evil non-intrusive
+              evil-normal-state-modes '(text-mode prog-mode)
+              evil-motion-state-modes nil
+              )
   :config
+  ;; On normal mode, we still want some basic Emacs keybindings working
   (dolist (m (list evil-normal-state-map evil-motion-state-map))
     (dolist (k '(("C-y" . yank)
                  ("C-b" . evil-backward-char)
@@ -33,14 +42,15 @@
                  ("C-e" . move-end-of-line)))
       (define-key m (kbd (car k)) (cdr k))))
   (define-key evil-normal-state-map (kbd "RET") #'my/insert-newline-indent)
+  (define-key evil-normal-state-map (kbd "M-.") #'xref-find-definitions)
+  ;; For other modes, we set basic navigation keys of Evil if the buffer is read-only
+  (define-key evil-emacs-state-map (kbd "h")   #'my/emacs-h)
+  (define-key evil-emacs-state-map (kbd "j")   #'my/emacs-j)
+  (define-key evil-emacs-state-map (kbd "k")   #'my/emacs-k)
+  (define-key evil-emacs-state-map (kbd "l")   #'my/emacs-l)
+  (define-key evil-emacs-state-map (kbd "C-u") #'my/emacs-C-u)
+  (define-key evil-emacs-state-map (kbd "C-d") #'my/emacs-C-d)
   (evil-mode 1))
-
-(use-package evil-collection
-  :after evil :demand t
-  :init (setq evil-collection-mode-list
-              '(dired help info ibuffer calendar xref flymake)
-              evil-collection-key-blacklist '("g"))
-  :config (evil-collection-init))
 
 ;;; General settings
 (setq-default indent-tabs-mode nil tab-width 4)
@@ -73,18 +83,16 @@
   (ivy-sort-matches-functions-alist '((t . ivy--sort-files-by-date)))
   :config (ivy-mode 1))
 (use-package company
-  :hook (after-init . global-company-mode)
   :custom (company-idle-delay 0.2) (company-minimum-prefix-length 1)
   (company-selection-wrap-around t) (company-show-numbers t)
-  :config (define-key company-mode-map (kbd "TAB") nil))
-(use-package yasnippet
-  :hook (after-init . yas-global-mode))
+  :config
+  (global-company-mode 1)
+  (define-key company-mode-map (kbd "TAB") nil))
 
 ;;; LSP: enabling only for specific languages I actually use.
 ;;; Other LSP implementations are not that great (e.g. Python, NASM)
 (use-package lsp-mode
-  :init (setq lsp-keymap-prefix "C-c l"
-              lsp-warn-no-matched-clients nil
+  :init (setq lsp-warn-no-matched-clients nil
               lsp-auto-install-server t
               lsp-enable-on-type-formatting nil   ; stop reindenting on Enter
               lsp-enable-indentation nil)         ; let cc-mode handle indent
@@ -109,24 +117,30 @@
   :hook ((asm-mode . nasm-mode) (nasm-mode . my/nasm-setup))
   :custom (nasm-basic-offset 4))
 
-;;; Terminal. Ghostel is great, emacs-only keybindings
+;;; Terminal. Ghostel is great, but do not use Evil
 (use-package ghostel
-  :defer t :custom (ghostel-shell "bash")
-  :config (evil-set-initial-state 'ghostel-mode 'emacs)
-  (add-hook 'ghostel-mode-hook #'evil-emacs-state))
+  :custom (ghostel-shell "bash"))
+(defun my/ghostel-disable-evil (&rest _)
+  (when (derived-mode-p 'ghostel-mode)
+    (evil-local-mode -1)))
+(advice-add 'evil-initialize :after #'my/ghostel-disable-evil)
 
 ;;; Misc
 (use-package which-key
-  :ensure nil :hook (after-init . which-key-mode)
-  :custom (which-key-idle-delay 0.3)
+  :ensure nil
+  :hook (after-init . which-key-mode)
+  :custom
+  (which-key-idle-delay 0.3)
   (which-key-side-window-location 'bottom)
   (which-key-sort-order #'which-key-key-order-alpha)
   (which-key-add-column-padding 1)
   (which-key-min-display-lines 6)
   (which-key-allow-imprecise-window-fit nil))
 (use-package diff-hl
-  :hook (find-file . turn-on-diff-hl-mode)
-  :config (global-diff-hl-mode))
+  :hook
+  (find-file . turn-on-diff-hl-mode)
+  :config
+  (global-diff-hl-mode))
 (use-package hl-todo
   :hook (prog-mode . hl-todo-mode)
   :custom (hl-todo-highlight-punctuation ":")
@@ -155,7 +169,17 @@
                 (lambda () (interactive) (split-window-below)
                   (other-window 1) (call-interactively #'ghostel)))
 (global-set-key (kbd "C-c r") #'revert-buffer)
-(windmove-swap-states-default-keybindings 'meta)
+
+;; Moving between buffers with Ctrl-<Arrow keys>
+(windmove-default-keybindings 'ctrl)
+;; Swapping buffers with Ctrl-Shift-<Arrow keys>
+(use-package buffer-move
+  :ensure t
+  :bind
+  (("C-S-<up>"    . buf-move-up)
+   ("C-S-<down>"  . buf-move-down)
+   ("C-S-<left>"  . buf-move-left)
+   ("C-S-<right>" . buf-move-right)))
 
 (provide 'init)
 ;;; init.el ends here
